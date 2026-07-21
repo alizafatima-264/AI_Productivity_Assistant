@@ -1,0 +1,12 @@
+{
+  "name": "aegis-focus",
+  "version": "1.0.0",
+  "description": "AI Productivity Assistant Web Application",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx -y http-server . -p 8080"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
