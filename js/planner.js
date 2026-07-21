@@ -249,15 +249,96 @@
     ]
   };
 
-  function generateRoadmapForGoal(title) {
+  function generateRoadmapForGoal(title, category) {
     const cleanTitle = title.trim().toLowerCase();
+    const capitalizedTitle = title.charAt(0).toUpperCase() + title.slice(1);
+
+    if (category === 'Fitness') {
+      return [
+        `Goal Setting & Baseline Assessment: ${capitalizedTitle}`,
+        `Warm-up Routine & Core Technique Practice`,
+        `Target Workout Session - Phase 1`,
+        `Recovery, Mobility & Flexibility Training`,
+        `Target Workout Session - Phase 2 (Intensity)`,
+        `Endurance & Stamina Conditioning`,
+        `Form Check & Progressive Overload Tracking`,
+        `Challenge Workout / Milestone Push`,
+        `Active Recovery & Performance Review`,
+        `Final Fitness Milestone Test`
+      ];
+    } else if (category === 'Health') {
+      return [
+        `Health Baseline Assessment & Plan: ${capitalizedTitle}`,
+        `Nutrition & Meal Prep Routine Setup`,
+        `Hydration & Daily Habit Tracking`,
+        `Core Health Activity Block 1`,
+        `Rest, Sleep Quality & Stress Reduction`,
+        `Core Health Activity Block 2`,
+        `Mid-Plan Health Metrics Review`,
+        `Healthy Lifestyle Integration`,
+        `Progress Evaluation & Habit Check`,
+        `Long-term Health Maintenance Plan`
+      ];
+    } else if (category === 'Career') {
+      return [
+        `Career Objectives & Skill Mapping: ${capitalizedTitle}`,
+        `Resume & LinkedIn Profile Alignment`,
+        `Key Professional Skill Building`,
+        `Project & Portfolio Development (Part 1)`,
+        `Networking & Outreach Execution`,
+        `Project & Portfolio Development (Part 2)`,
+        `Mock Interview & Application Prep`,
+        `Application Submissions & Outreach`,
+        `Industry Insight & Feedback Iteration`,
+        `Final Career Milestone Review`
+      ];
+    } else if (category === 'Finance') {
+      return [
+        `Financial Goal & Budget Audit: ${capitalizedTitle}`,
+        `Expense Tracking & Savings Strategy`,
+        `Income Stream & Investment Research`,
+        `Debt Reduction & Asset Building Plan`,
+        `Financial Portfolio Review (Step 1)`,
+        `Financial Portfolio Review (Step 2)`,
+        `Emergency Fund & Risk Optimization`,
+        `Automation of Savings & Investments`,
+        `Financial Progress Audit`,
+        `Long-term Wealth Strategy Review`
+      ];
+    } else if (category === 'Personal') {
+      return [
+        `Personal Intention & Goal Setting: ${capitalizedTitle}`,
+        `Action Plan & Daily Routine Setup`,
+        `Initial Execution & Habit Block`,
+        `Reflection & Obstacle Management`,
+        `Mid-way Milestone Execution`,
+        `Consistency & Progress Checkpoint`,
+        `Deep Execution Block`,
+        `Reflection & Integration`,
+        `Final Push & Task Completion`,
+        `Habit Consolidation & Celebration`
+      ];
+    } else if (category === 'Hobby') {
+      return [
+        `Introduction & Setup for ${capitalizedTitle}`,
+        `Supplies & Fundamental Skill Learning`,
+        `Basic Skill Drills & Starter Project`,
+        `Practice Session 1: Exploration`,
+        `Technique Refinement & Adjustments`,
+        `Practice Session 2: Advanced Crafting`,
+        `Creative Showcase / Main Hobby Project`,
+        `Finishing Touches & Polishing`,
+        `Sharing Work & Reflection`,
+        `Mastery Review & Next Steps`
+      ];
+    }
+
     for (const key in COURSE_TEMPLATES) {
       if (cleanTitle === key || cleanTitle.includes(key)) {
         return [...COURSE_TEMPLATES[key]];
       }
     }
     const topics = [];
-    const capitalizedTitle = title.charAt(0).toUpperCase() + title.slice(1);
     if (cleanTitle.includes('learn') || cleanTitle.includes('study') || cleanTitle.includes('master')) {
       const subject = title.replace(/(learn|study|master|how to)\s+/i, '');
       const capSubject = subject.charAt(0).toUpperCase() + subject.slice(1);
@@ -312,6 +393,105 @@
     if (ampm === 'PM' && hour !== 12) hour += 12;
     if (ampm === 'AM' && hour === 12) hour = 0;
     return hour;
+  }
+
+  // ─── Goal Timeline Renderer ────────────────────────────────────────────────
+  function renderGoalTimeline() {
+    const timelineList = document.getElementById('goal-timeline-list');
+    if (!timelineList) return;
+
+    timelineList.innerHTML = '';
+
+    const activeGoals = window.AppState.getActiveGoals();
+    const activeGoalIds = activeGoals.map(g => g.id);
+    const allMissions = (window.AppState.data && window.AppState.data.missions) ? window.AppState.data.missions : [];
+
+    const activeMissions = allMissions.filter(m => activeGoalIds.includes(m.goalId));
+
+    if (activeMissions.length === 0) {
+      timelineList.innerHTML = `
+        <div style="text-align: center; color: var(--text-secondary); padding: 2rem 1rem; background: rgba(16, 26, 48, 0.3); border-radius: var(--radius-md); border: 1px dashed var(--card-border);">
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🗓️</div>
+          <p style="font-size: 0.9rem;">No active goal roadmap generated yet. Click <strong>+ Create Goal</strong> to build your plan!</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Group active missions by date
+    const missionsByDate = {};
+    activeMissions.forEach(m => {
+      if (!missionsByDate[m.date]) missionsByDate[m.date] = [];
+      missionsByDate[m.date].push(m);
+    });
+
+    const sortedDates = Object.keys(missionsByDate).sort();
+
+    sortedDates.forEach(dateStr => {
+      const dayBox = document.createElement('div');
+      dayBox.className = 'glass-card';
+      dayBox.style.cssText = 'padding: 1.25rem; border: 1px solid var(--card-border); background: rgba(11, 18, 32, 0.6);';
+
+      const parts = dateStr.split('-');
+      const dObj = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      const formattedDate = dObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' });
+
+      const header = document.createElement('div');
+      header.style.cssText = 'font-size: 1rem; font-weight: 800; color: var(--primary); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid rgba(59, 130, 246, 0.15); padding-bottom: 0.4rem;';
+      header.innerHTML = `
+        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>${formattedDate}</span>
+      `;
+      dayBox.appendChild(header);
+
+      const taskList = document.createElement('div');
+      taskList.style.cssText = 'display: flex; flex-direction: column; gap: 0.5rem;';
+
+      missionsByDate[dateStr].forEach((m, idx) => {
+        const item = document.createElement('div');
+        item.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 0.6rem 0.85rem; border-radius: var(--radius-md); background: rgba(16, 26, 48, 0.4); border: 1px solid rgba(255, 255, 255, 0.05);';
+
+        const left = document.createElement('div');
+        left.style.cssText = 'display: flex; align-items: center; gap: 0.75rem;';
+
+        const taskNum = document.createElement('span');
+        taskNum.style.cssText = 'font-size: 0.75rem; font-weight: 700; color: var(--text-muted); min-width: 50px;';
+        taskNum.textContent = `Task ${idx + 1}`;
+
+        const taskTitle = document.createElement('span');
+        taskTitle.style.cssText = 'font-size: 0.875rem; color: var(--text-primary); font-weight: 500;';
+        taskTitle.textContent = m.title;
+
+        left.appendChild(taskNum);
+        left.appendChild(taskTitle);
+
+        const right = document.createElement('div');
+        right.style.cssText = 'display: flex; align-items: center; gap: 0.75rem;';
+
+        const goalBadge = document.createElement('span');
+        goalBadge.style.cssText = 'font-size: 0.7rem; color: var(--accent); background: rgba(139, 92, 246, 0.1); padding: 0.2rem 0.5rem; border-radius: 999px; border: 1px solid rgba(139, 92, 246, 0.2);';
+        goalBadge.textContent = m.goalTitle || 'Goal';
+
+        const timeSlot = document.createElement('span');
+        timeSlot.style.cssText = 'font-size: 0.75rem; color: var(--text-secondary);';
+        timeSlot.textContent = m.timeSlot || '09:00 AM';
+
+        const statusBadge = document.createElement('span');
+        statusBadge.style.cssText = `font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 4px; ${m.completed ? 'color: var(--emerald); background: rgba(16,185,129,0.1);' : 'color: var(--primary); background: rgba(59,130,246,0.1);'}`;
+        statusBadge.textContent = m.completed ? '✓ Done' : 'Pending';
+
+        right.appendChild(goalBadge);
+        right.appendChild(timeSlot);
+        right.appendChild(statusBadge);
+
+        item.appendChild(left);
+        item.appendChild(right);
+        taskList.appendChild(item);
+      });
+
+      dayBox.appendChild(taskList);
+      timelineList.appendChild(dayBox);
+    });
   }
 
   // ─── Calendar Rendering ────────────────────────────────────────────────────
@@ -448,6 +628,8 @@
         grid.appendChild(cell);
       });
     });
+
+    renderGoalTimeline();
   }
 
   // Assign a consistent accent color per goalId
@@ -525,8 +707,13 @@
   const roadmapTopicsList = document.getElementById('roadmap-topics-list');
 
   const inputTitle = document.getElementById('goal-input-title');
+  const inputCategory = document.getElementById('goal-input-category');
   const inputReason = document.getElementById('goal-input-reason');
+  const inputStartOption = document.getElementById('goal-input-start-option');
+  const customStartDateGroup = document.getElementById('goal-custom-start-date-group');
+  const inputCustomStartDate = document.getElementById('goal-input-custom-start-date');
   const inputDeadline = document.getElementById('goal-input-deadline');
+
   const questionText = document.getElementById('assessment-question-text');
   const optionsContainer = document.getElementById('assessment-options-container');
   const loadingPanel = document.getElementById('ai-loading-panel');
@@ -537,7 +724,21 @@
   const planOutputInsights = document.getElementById('plan-output-insights');
   const planOutputMissions = document.getElementById('plan-output-missions');
 
-  let currentGoalData = { title: '', reason: '', deadline: '', answers: {}, generatedMissions: [] };
+  let currentGoalData = { title: '', category: 'Study', reason: '', deadline: '', startOption: 'today', customStartDate: '', answers: {}, generatedMissions: [] };
+
+  if (inputStartOption) {
+    inputStartOption.addEventListener('change', (e) => {
+      if (e.target.value === 'choose') {
+        if (customStartDateGroup) customStartDateGroup.style.display = 'block';
+      } else {
+        if (customStartDateGroup) customStartDateGroup.style.display = 'none';
+      }
+    });
+  }
+
+  if (inputCustomStartDate) {
+    inputCustomStartDate.value = new Date().toISOString().split('T')[0];
+  }
 
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 7);
@@ -582,7 +783,16 @@
       { key: 'morning', text: "Morning (6 AM – 12 PM)" },
       { key: 'afternoon', text: "Afternoon (12 PM – 5 PM)" },
       { key: 'evening', text: "Evening (5 PM – 9 PM)" },
-      { key: 'night', text: "Night (9 PM – 2 AM)" }
+      { key: 'night', text: "Night (9 PM – 2 AM)" },
+      { key: 'custom', text: "Custom Time" }
+    ]},
+    { id: 'distraction', question: "What is your main distraction?", options: [
+      { key: 'procrastination', text: "Procrastination" },
+      { key: 'phone', text: "Phone / Social Media" },
+      { key: 'low_motivation', text: "Low Motivation" },
+      { key: 'lack_of_time', text: "Lack of Time" },
+      { key: 'overwhelmed', text: "Feeling Overwhelmed" },
+      { key: 'other', text: "Other" }
     ]},
     { id: 'dailyTime', question: "Daily available time", options: [
       { key: '30m', text: "30 Minutes" },
@@ -609,9 +819,7 @@
       { key: '5m', text: "5 Minutes (Just show up)" },
       { key: '15m', text: "15 Minutes (Short practice)" },
       { key: '30m', text: "30 Minutes (Focus block)" }
-    ]},
-    { id: 'dailyStartTime', question: "Daily Start Time", type: 'time', default: '07:00' },
-    { id: 'dailyEndTime', question: "Daily End Time", type: 'time', default: '22:00' }
+    ]}
   ];
 
   let activeQuestionsList = [];
@@ -636,7 +844,7 @@
       
       const val = savedAnswer || qObj.default;
       input.value = val;
-      currentGoalData.answers[qObj.id] = val; // auto-initialize
+      currentGoalData.answers[qObj.id] = val;
       btnToStep3.disabled = false;
       
       input.addEventListener('change', (e) => {
@@ -647,6 +855,7 @@
       optionsContainer.appendChild(container);
     } else {
       btnToStep3.disabled = !savedAnswer;
+      
       qObj.options.forEach(opt => {
         const card = document.createElement('div');
         card.className = 'option-card' + (savedAnswer === opt.key ? ' selected' : '');
@@ -656,9 +865,75 @@
           card.classList.add('selected');
           currentGoalData.answers[qObj.id] = opt.key;
           btnToStep3.disabled = false;
+
+          const customTimeContainer = document.getElementById('custom-time-pickers-container');
+          if (qObj.id === 'workingTime') {
+            if (opt.key === 'custom') {
+              if (customTimeContainer) customTimeContainer.style.display = 'flex';
+            } else {
+              if (customTimeContainer) customTimeContainer.style.display = 'none';
+            }
+          }
+
+          const distractionOtherContainer = document.getElementById('distraction-other-container');
+          if (qObj.id === 'distraction') {
+            if (opt.key === 'other') {
+              if (distractionOtherContainer) distractionOtherContainer.style.display = 'block';
+            } else {
+              if (distractionOtherContainer) distractionOtherContainer.style.display = 'none';
+            }
+          }
         });
         optionsContainer.appendChild(card);
       });
+
+      if (qObj.id === 'workingTime') {
+        const timeContainer = document.createElement('div');
+        timeContainer.id = 'custom-time-pickers-container';
+        timeContainer.style.cssText = 'display: ' + (savedAnswer === 'custom' ? 'flex' : 'none') + '; gap: 1rem; justify-content: center; align-items: center; width: 100%; margin-top: 1rem;';
+        timeContainer.innerHTML = `
+          <div style="display:flex; flex-direction:column; align-items:center; gap:0.25rem;">
+            <label style="font-size:0.75rem; color:var(--text-secondary);">Custom Start Time</label>
+            <input type="time" class="form-control" id="custom-working-start-time" value="${currentGoalData.answers.customStartTime || '09:00'}" style="text-align:center; max-width:140px;">
+          </div>
+          <div style="display:flex; flex-direction:column; align-items:center; gap:0.25rem;">
+            <label style="font-size:0.75rem; color:var(--text-secondary);">Custom End Time</label>
+            <input type="time" class="form-control" id="custom-working-end-time" value="${currentGoalData.answers.customEndTime || '17:00'}" style="text-align:center; max-width:140px;">
+          </div>
+        `;
+        optionsContainer.appendChild(timeContainer);
+
+        const startTimeInput = timeContainer.querySelector('#custom-working-start-time');
+        const endTimeInput = timeContainer.querySelector('#custom-working-end-time');
+        if (startTimeInput) {
+          startTimeInput.addEventListener('change', (e) => {
+            currentGoalData.answers.customStartTime = e.target.value;
+          });
+        }
+        if (endTimeInput) {
+          endTimeInput.addEventListener('change', (e) => {
+            currentGoalData.answers.customEndTime = e.target.value;
+          });
+        }
+      }
+
+      if (qObj.id === 'distraction') {
+        const otherContainer = document.createElement('div');
+        otherContainer.id = 'distraction-other-container';
+        otherContainer.style.cssText = 'display: ' + (savedAnswer === 'other' ? 'block' : 'none') + '; width: 100%; margin-top: 1rem;';
+        otherContainer.innerHTML = `
+          <label style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:0.35rem; display:block;">Please specify your reason:</label>
+          <input type="text" class="form-control" id="distraction-other-input" placeholder="e.g. Procrastinating on tasks, high volume of notifications..." value="${currentGoalData.answers.distractionOther || ''}">
+        `;
+        optionsContainer.appendChild(otherContainer);
+
+        const otherInput = otherContainer.querySelector('#distraction-other-input');
+        if (otherInput) {
+          otherInput.addEventListener('input', (e) => {
+            currentGoalData.answers.distractionOther = e.target.value;
+          });
+        }
+      }
     }
   }
 
@@ -684,8 +959,11 @@
       activeQuestionsList = [...baseQuestions, { id: 'obstacle', question: obstacleQuestion.question, options: obstacleQuestion.options, insight: obstacleQuestion.insight }];
       currentQuestionIndex = 0;
       currentGoalData.title = title;
+      currentGoalData.category = inputCategory ? inputCategory.value : 'Study';
       currentGoalData.reason = reason;
       currentGoalData.deadline = deadline;
+      currentGoalData.startOption = inputStartOption ? inputStartOption.value : 'today';
+      currentGoalData.customStartDate = inputCustomStartDate ? inputCustomStartDate.value : new Date().toISOString().split('T')[0];
 
       step1Card.style.display = 'none';
       step2Card.className = 'glass-card planner-step-content active-step';
@@ -824,8 +1102,8 @@
         ind2.className = 'step-indicator completed';
         ind3.className = 'step-indicator active';
         
-        // Generate initial roadmap topics
-        currentRoadmap = generateRoadmapForGoal(currentGoalData.title);
+        // Generate initial roadmap topics with category
+        currentRoadmap = generateRoadmapForGoal(currentGoalData.title, currentGoalData.category);
         renderRoadmapTopics();
       }
     });
@@ -894,12 +1172,19 @@
     currentGoalData.priority = priority;
     currentGoalData.generatedMissions = missions;
 
-    planOutputTitle.textContent = `Aegis Plan: ${currentGoalData.title} (Priority ${priority})`;
+    planOutputTitle.textContent = `Aegis Plan: ${currentGoalData.title} (${currentGoalData.category} • Priority ${priority})`;
     const obstacleObj = activeQuestionsList.find(q => q.id === 'obstacle');
     const obstacleInsight = obstacleObj ? obstacleObj.insight : "We've balanced your study slots.";
+    
+    let timeSlotLabel = currentGoalData.answers.workingTime;
+    if (currentGoalData.answers.workingTime === 'custom' && currentGoalData.answers.customStartTime) {
+      timeSlotLabel = `Custom (${currentGoalData.answers.customStartTime} - ${currentGoalData.answers.customEndTime || '17:00'})`;
+    }
+
     planOutputInsights.innerHTML = `
+      <strong>Category:</strong> ${currentGoalData.category}<br>
       <strong>Goal Priority:</strong> Priority ${priority}<br>
-      <strong>Preferred Slot:</strong> ${currentGoalData.answers.workingTime} (${missions[0]?.timeSlot || '09:00 AM'})<br>
+      <strong>Preferred Slot:</strong> ${timeSlotLabel} (${missions[0]?.timeSlot || '09:00 AM'})<br>
       <strong>Workload:</strong> ${missions.length} focus sessions total.<br>
       <strong>AI Advisor:</strong> ${obstacleInsight}
     `;
@@ -956,20 +1241,27 @@
 
   // ─── AI Scheduling Engine (Collision-Resistant) ────────────────────────────
   function generateGoalMissions(title, deadline, answers, roadmap) {
-    const today = new Date();
+    let startDate = new Date();
+    if (currentGoalData.startOption === 'tomorrow') {
+      startDate.setDate(startDate.getDate() + 1);
+    } else if (currentGoalData.startOption === 'choose' && currentGoalData.customStartDate) {
+      const parts = currentGoalData.customStartDate.split('-');
+      if (parts.length === 3) {
+        startDate = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+      }
+    }
+    startDate.setHours(0, 0, 0, 0);
+
     const deadlineDate = new Date(deadline);
-    const timeDiff = deadlineDate - today;
+    const timeDiff = deadlineDate - startDate;
     const totalDays = Math.max(7, Math.ceil(timeDiff / (1000 * 60 * 60 * 24)));
 
-    // Use or generate the roadmap topics list
-    const finalRoadmap = (roadmap && roadmap.length > 0) ? roadmap : generateRoadmapForGoal(title);
+    const finalRoadmap = (roadmap && roadmap.length > 0) ? roadmap : generateRoadmapForGoal(title, currentGoalData.category);
 
-    // Priority based on deadline urgency
     let priority = 3;
     if (totalDays <= 14) priority = 1;
     else if (totalDays <= 30) priority = 2;
 
-    // Base focus minutes from daily available time
     let baseMins = 25;
     if (answers.dailyTime === '30m') baseMins = 30;
     else if (answers.dailyTime === '1h') baseMins = 60;
@@ -979,79 +1271,45 @@
     if (answers.difficulty === 'easy') baseMins = Math.max(15, Math.round(baseMins * 0.75));
     else if (answers.difficulty === 'hard') baseMins = Math.round(baseMins * 1.25);
 
-    // Active days of the week based on user availability
     let activeDays;
     if (answers.weeklyDays === '7d') {
-      activeDays = [0, 1, 2, 3, 4, 5, 6]; // all 7
+      activeDays = [0, 1, 2, 3, 4, 5, 6];
     } else if (answers.weeklyDays === '5d') {
-      activeDays = [1, 2, 3, 4, 5]; // Mon–Fri
+      activeDays = [1, 2, 3, 4, 5];
     } else {
-      activeDays = [1, 3, 5]; // Mon, Wed, Fri (3d)
+      activeDays = [1, 3, 5];
     }
 
-    // Daily hours range
-    const startHour = answers.dailyStartTime ? parseInt(answers.dailyStartTime.split(':')[0], 10) : 7;
-    const endHour = answers.dailyEndTime ? parseInt(answers.dailyEndTime.split(':')[0], 10) : 22;
+    let startHour = 7;
+    let endHour = 22;
+    let baseHour = 9;
 
-    // Base hour from preferred working time (clamped into custom window)
-    let baseHour = startHour;
-    if (answers.workingTime === 'morning') baseHour = 9;
-    else if (answers.workingTime === 'afternoon') baseHour = 14;
-    else if (answers.workingTime === 'evening') baseHour = 19;
-    else if (answers.workingTime === 'night') baseHour = 22;
-
-    if (!isHourInWindow(baseHour, startHour, endHour)) {
+    if (answers.workingTime === 'custom') {
+      startHour = answers.customStartTime ? parseInt(answers.customStartTime.split(':')[0], 10) : 9;
+      endHour = answers.customEndTime ? parseInt(answers.customEndTime.split(':')[0], 10) : 17;
       baseHour = startHour;
-    }
-
-    // Smart first-day scheduling
-    let canScheduleToday = true;
-    const now = new Date();
-    const currentHour = now.getHours();
-
-    // 1. Check if the current time is past the daily end time
-    if (currentHour >= endHour) {
-      canScheduleToday = false;
-    }
-
-    // 2. Check if the preferred study period has already passed today
-    let preferredEndHour = 12;
-    if (answers.workingTime === 'afternoon') preferredEndHour = 17;
-    else if (answers.workingTime === 'evening') preferredEndHour = 21;
-    else if (answers.workingTime === 'night') preferredEndHour = 2;
-
-    if (preferredEndHour > 2) {
-      if (currentHour >= preferredEndHour) {
-        canScheduleToday = false;
-      }
+      answers.dailyStartTime = answers.customStartTime || '09:00';
+      answers.dailyEndTime = answers.customEndTime || '17:00';
     } else {
-      if (currentHour >= 2 && currentHour < 21) {
-        canScheduleToday = true; // Night is upcoming tonight
-      } else if (currentHour >= 21 || currentHour < 2) {
-        canScheduleToday = true; // Night is ongoing
-      } else {
-        canScheduleToday = false;
-      }
+      if (answers.workingTime === 'morning') { startHour = 6; endHour = 12; baseHour = 9; }
+      else if (answers.workingTime === 'afternoon') { startHour = 12; endHour = 17; baseHour = 14; }
+      else if (answers.workingTime === 'evening') { startHour = 17; endHour = 21; baseHour = 19; }
+      else if (answers.workingTime === 'night') { startHour = 21; endHour = 2; baseHour = 22; }
     }
 
-    const startOffset = canScheduleToday ? 0 : 1;
-
-    // Gather all already-scheduled missions (from existing goals) for collision detection
     const existingMissions = (window.AppState.data && window.AppState.data.missions) ? window.AppState.data.missions : [];
-
     const missions = [];
     let missionIndex = 0;
 
     for (let i = 0; i < totalDays; i++) {
-      const currentDate = new Date(today);
-      currentDate.setDate(today.getDate() + i + startOffset);
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + i);
       const currentDayOfWeek = currentDate.getDay();
 
       if (!activeDays.includes(currentDayOfWeek)) continue;
 
       const dateStr = currentDate.toISOString().split('T')[0];
 
-      // Collision-resistant slot assignment: shift hour if occupied within range
       let slotHour = baseHour;
       let slotStr = formatHour12(slotHour);
       const allOccupied = [...existingMissions, ...missions];
@@ -1062,12 +1320,11 @@
         attempts++;
       }
 
-      // Assign specific topic from finalRoadmap
       let displayTitle = "";
       if (missionIndex < finalRoadmap.length) {
         displayTitle = finalRoadmap[missionIndex];
       } else {
-        displayTitle = `Revision & Practice: ${title}`;
+        displayTitle = `Practice & Refinement: ${title}`;
       }
 
       missions.push({
@@ -1091,10 +1348,14 @@
 
   // ─── Reset Wizard ──────────────────────────────────────────────────────────
   function resetPlannerWizard() {
-    currentGoalData = { title: '', reason: '', deadline: '', answers: {}, generatedMissions: [] };
+    currentGoalData = { title: '', category: 'Study', reason: '', deadline: '', startOption: 'today', customStartDate: '', answers: {}, generatedMissions: [] };
     currentRoadmap = [];
     if (inputTitle) inputTitle.value = '';
+    if (inputCategory) inputCategory.value = 'Study';
     if (inputReason) inputReason.value = '';
+    if (inputStartOption) inputStartOption.value = 'today';
+    if (customStartDateGroup) customStartDateGroup.style.display = 'none';
+
     const d = new Date();
     d.setDate(d.getDate() + 7);
     if (inputDeadline) inputDeadline.value = d.toISOString().split('T')[0];
